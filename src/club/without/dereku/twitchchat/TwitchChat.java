@@ -23,7 +23,6 @@ import java.util.UUID;
 import java.util.logging.Level;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jibble.pircbot.IrcException;
 
@@ -37,12 +36,12 @@ public class TwitchChat extends JavaPlugin {
     private final ArrayList<String> autojoinChannels = new ArrayList<>();
     //Send message to players
     private final ArrayList<UUID> smtp = new ArrayList<>();
-    
+
     private IRCClient client;
     private MessageFormat twitchMessage;
-    private String oauthKey, badgeMod, badgeTurbo, badgeSubscriber;
-    private boolean broadcastMessage;
-    
+    private String name, oauthKey, badgeMod, badgeTurbo, badgeSubscriber;
+    private boolean verbose, broadcastMessage;
+
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
@@ -55,10 +54,16 @@ public class TwitchChat extends JavaPlugin {
     public void onDisable() {
         this.client.disconnect();
     }
-    
+
     private void initConnection() {
+        if (this.client.isConnected()) {
+            this.client.disconnect();
+        }
+
         try {
             this.client.setEncoding("UTF-8");
+            this.client.setName(this.name);
+            this.client.setVerbose(this.verbose);
             this.client.connect("irc.chat.twitch.tv", 6667, this.oauthKey);
             this.client.sendRawLine("CAP REQ :twitch.tv/tags");
             this.autojoinChannels.stream().forEach(chan -> {
@@ -73,24 +78,24 @@ public class TwitchChat extends JavaPlugin {
         if (this.client.isConnected()) {
             this.client.disconnect();
         }
-        
+
         this.autojoinChannels.clear();
         this.ignoreList.clear();
-        
+
         this.reloadConfig();
         ConfigurationSection cs = this.getConfig();
-        
-        this.broadcastMessage = cs.getBoolean("broadcastMessage");
-        
-        this.client.setVerbose(cs.getBoolean("verbose"));
-        this.client.setName(cs.getString("connection.nick").toLowerCase());
-        
+
+        this.verbose = cs.getBoolean("verbose");
+
+        this.name = cs.getString("connection.nick").toLowerCase();
         this.oauthKey = cs.getString("connection.oAuthKey");
-        
-        this.badgeMod = cs.getString("tags.mod");
-        this.badgeTurbo = cs.getString("tags.turbo");
-        this.badgeSubscriber = cs.getString("tags.subscriber");
-       
+
+        this.broadcastMessage = cs.getBoolean("broadcastMessage");
+
+        this.badgeMod = ChatColor.translateAlternateColorCodes('&', cs.getString("tags.mod"));
+        this.badgeTurbo = ChatColor.translateAlternateColorCodes('&', cs.getString("tags.turbo"));
+        this.badgeSubscriber = ChatColor.translateAlternateColorCodes('&', cs.getString("tags.subscriber"));
+
         cs.getStringList("autojoinChannels").stream().forEach(chan -> {
             this.autojoinChannels.add("#".concat(chan.toLowerCase()));
         });
@@ -98,23 +103,21 @@ public class TwitchChat extends JavaPlugin {
         cs.getStringList("usersIgnoreList").stream().forEach(user -> {
             this.ignoreList.add(user.toLowerCase());
         });
-        
+
         if (cs.getBoolean("shouldIgnoreYourself")) {
             this.ignoreList.add(this.client.getName().toLowerCase());
         }
-        
+
         this.twitchMessage = new MessageFormat(
                 ChatColor.translateAlternateColorCodes('&', cs.getString("twitchChatStyle"))
         );
-        
-        
     }
-    
+
     public void onMessage(ChatEntry entry) {
         if (this.ignoreList.contains(entry.getUsername())) {
             return;
         }
-        
+
         StringBuilder badges = new StringBuilder();
         if (entry.isMod() || entry.isSubscriber() || entry.isTurbo()) {
             if (entry.isMod()) {
@@ -127,14 +130,14 @@ public class TwitchChat extends JavaPlugin {
                 badges.append(this.badgeSubscriber);
             }
         }
-        
+
         String output = this.twitchMessage.format(new Object[]{
-                        entry.getChannel(), 
-                        badges.toString(), 
-                        entry.getDisplayName(), 
-                        entry.getMessage()
-                    });
-        
+            entry.getChannel(),
+            badges.toString(),
+            entry.getDisplayName(),
+            entry.getMessage()
+        });
+// Not implemented yet
 //        if (!this.broadcastMessage) {
 //            this.smtp.stream().forEach((uuid) -> {
 //                this.getServer().getPlayer(uuid).sendMessage(output);

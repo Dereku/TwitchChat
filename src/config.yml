@@ -3,9 +3,9 @@ sendMessagePrefix: '%' #Not implemented yet
 broadcastMessage: false #Not implemented yet
 shouldIgnoreYourself: true
 tags:
-    mod: "🔨"
-    turbo: "🚀"
-    subscriber: "❤"
+    mod: "&aM"
+    turbo: "&5T"
+    subscriber: "&c\u2764"
 verbose: false
 connection:
     nick: unknown
