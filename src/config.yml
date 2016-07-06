@@ -1,0 +1,19 @@
+twitchChatStyle: "&7[&5Twitch:{0}&7]&r {1} {2}: {3}"
+sendMessagePrefix: '%' #Not implemented yet
+broadcastMessage: false #Not implemented yet
+shouldIgnoreYourself: true
+tags:
+    mod: "🔨"
+    turbo: "🚀"
+    subscriber: "❤"
+verbose: false
+connection:
+    nick: unknown
+    oAuthKey: "oauth:unknown"
+autojoinChannels:
+    - unknown
+usersIgnoreList:
+    - unknown
+    - mikuiabot
+    - moobot
+    - nightbot

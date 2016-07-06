@@ -1,0 +1,8 @@
+name: TwitchChat
+version: 0.0
+main: club.without.dereku.twitchchat.TwitchChat
+commands:
+    twitchchat:
+        permission: twitchchat.command.use
+        aliases: [tc]
+        usage: /<command>
