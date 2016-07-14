@@ -20,7 +20,7 @@ import club.without.dereku.twitchchat.TwitchChat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.BiFunction;
-import org.bukkit.entity.Player;
+import org.bukkit.command.CommandSender;
 
 /**
  *
@@ -38,17 +38,17 @@ public class CommandsHandler {
 
     private void initCommands() {
         String addChannelDesc = "TODO: description for addchannel";
-        BiFunction<Player, ArrayList<String>, Boolean> addChannel = (Player player, ArrayList<String> channels) -> {
+        BiFunction<CommandSender, ArrayList<String>, Boolean> addChannel = (CommandSender commandSender, ArrayList<String> channels) -> {
             ArrayList<String> outMessages = new ArrayList<>();
             channels.stream().forEach(channel -> {
-                if (player.hasPermission("twitchchat.addchannel.".concat(channel.toLowerCase()))) {
+                if (commandSender.hasPermission("twitchchat.addchannel.".concat(channel.toLowerCase()))) {
                     CommandsHandler.this.plugin.addChannel(channel.toLowerCase());
-                    player.sendMessage("Channel \"#".concat(channel).concat("\" has added."));
+                    commandSender.sendMessage("Channel \"#".concat(channel).concat("\" has added."));
                 }
             });
             
             outMessages.stream().forEach(message -> {
-                player.sendMessage(message);
+                commandSender.sendMessage(message);
             });
 
             return !outMessages.isEmpty();
@@ -59,17 +59,17 @@ public class CommandsHandler {
         ////////////////////////////////////////////////////////////////////////
         
         String removeChannelDesc = "TODO: description for removechannel";
-        BiFunction<Player, ArrayList<String>, Boolean> removeChannel = (Player player, ArrayList<String> channels) -> {
+        BiFunction<CommandSender, ArrayList<String>, Boolean> removeChannel = (CommandSender commandSender, ArrayList<String> channels) -> {
             ArrayList<String> outMessages = new ArrayList<>();
             channels.stream().forEach(channel -> {
-                if (player.hasPermission("twitchchat.removechannel.".concat(channel.toLowerCase()))) {
+                if (commandSender.hasPermission("twitchchat.removechannel.".concat(channel.toLowerCase()))) {
                     CommandsHandler.this.plugin.removeChannel(channel.toLowerCase());
                     outMessages.add("Channel \"#".concat(channel).concat("\" has removed."));
                 }
             });
             
             outMessages.stream().forEach(message -> {
-                player.sendMessage(message);
+                commandSender.sendMessage(message);
             });
             
             return !outMessages.isEmpty();
@@ -79,36 +79,67 @@ public class CommandsHandler {
         this.commands.put("removechannel", removeChannelCommand);
         ////////////////////////////////////////////////////////////////////////
         
-        BiFunction<Player, ArrayList<String>, Boolean> ignoreListAdd = (Player player, ArrayList<String> usernames) -> {
+        String ignoreListAddDesc = "TODO: description for ignoreListAdd";
+        BiFunction<CommandSender, ArrayList<String>, Boolean> ignoreListAdd = (CommandSender commandSender, ArrayList<String> usernames) -> {
             ArrayList<String> outMessages = new ArrayList<>();
             usernames.stream().forEach((String username) -> {
-                if (player.hasPermission("twitchchat.ignorelist.add.".concat(username.toLowerCase()))) {
+                if (commandSender.hasPermission("twitchchat.ignorelist.add.".concat(username.toLowerCase()))) {
                     CommandsHandler.this.plugin.ignoreListAdd(username.toLowerCase());
                     outMessages.add("User \"".concat(username).concat("\" has ignored."));
                 }
             });
             
             outMessages.stream().forEach(message -> {
-                player.sendMessage(message);
+                commandSender.sendMessage(message);
             });
             
             return !outMessages.isEmpty();
         };
         
-        BiFunction<Player, ArrayList<String>, Boolean> ignoreListRemove = (Player player, ArrayList<String> usernames) -> {
+        Command ignoreListAddCommand = new Command(ignoreListAddDesc, ignoreListAdd);
+        this.commands.put("ignorelistadd", ignoreListAddCommand);
+        ////////////////////////////////////////////////////////////////////////
+        
+        String ignoreListRemoveDesc = "TODO: description for ignoreListRemove";
+        BiFunction<CommandSender, ArrayList<String>, Boolean> ignoreListRemove = (CommandSender commandSender, ArrayList<String> usernames) -> {
             ArrayList<String> outMessages = new ArrayList<>();
             usernames.stream().forEach((String username) -> {
-                if (player.hasPermission("twitchchat.ignorelist.remove.".concat(username.toLowerCase()))) {
+                if (commandSender.hasPermission("twitchchat.ignorelist.remove.".concat(username.toLowerCase()))) {
                     CommandsHandler.this.plugin.ignoreListRemove(username.toLowerCase());
                     outMessages.add("User \"".concat(username).concat("\" has no more ignored."));
                 }
             });
             
             outMessages.stream().forEach(message -> {
-                player.sendMessage(message);
+                commandSender.sendMessage(message);
             });
             
             return !outMessages.isEmpty();
         };
+        
+        Command ignoreListRemoveCommand = new Command(ignoreListRemoveDesc, ignoreListRemove);
+        this.commands.put("ignorelistremove", ignoreListRemoveCommand);
+        ////////////////////////////////////////////////////////////////////////
+
+        String recieversAddDesc = "TODO: description for ignoreListRemove";
+        BiFunction<CommandSender, ArrayList<String>, Boolean> recieversAdd = (CommandSender commandSender, ArrayList<String> usernames) -> {
+            ArrayList<String> outMessages = new ArrayList<>();
+            usernames.stream().forEach((String username) -> {
+                if (commandSender.hasPermission("twitchchat.recievers.add.".concat(username.toLowerCase()))) {
+                    CommandsHandler.this.plugin.ignoreListRemove(username.toLowerCase());
+                    outMessages.add("User \"".concat(username).concat("\" has no more ignored."));
+                }
+            });
+
+            outMessages.stream().forEach(message -> {
+                commandSender.sendMessage(message);
+            });
+
+            return !outMessages.isEmpty();
+        };
+
+        Command recieversAddCommand = new Command(recieversAddDesc, recieversAdd);
+        this.commands.put("recieversadd", recieversAddCommand);
+
     }
 }

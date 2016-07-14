@@ -2,6 +2,7 @@ twitchChatStyle: "&7[&5Twitch:{0}&7]&r {1} &7{2}&8:&r {3}"
 sendMessagePrefix: '%' #Not implemented yet
 broadcastMessage: false #Not implemented yet
 shouldIgnoreYourself: true
+autojoin: false
 tags:
     mod: "&aM"
     turbo: "&5T"
@@ -10,10 +11,11 @@ verbose: false
 connection:
     nick: unknown
     oAuthKey: "oauth:unknown"
-autojoinChannels:
+channels:
     - unknown
-usersIgnoreList:
+ignoreList:
     - unknown
     - mikuiabot
     - moobot
     - nightbot
+messageRecievers: []

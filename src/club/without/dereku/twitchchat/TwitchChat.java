@@ -34,13 +34,12 @@ public class TwitchChat extends JavaPlugin {
 
     private final ArrayList<String> ignoreList = new ArrayList<>();
     private final ArrayList<String> currentChannels = new ArrayList<>();
-    //Send message to players
-    private final ArrayList<UUID> smtp = new ArrayList<>();
+    private final ArrayList<UUID> recievers = new ArrayList<>();
 
     private IRCClient client;
     private MessageFormat twitchMessage;
     private String name, oauthKey, badgeMod, badgeTurbo, badgeSubscriber;
-    private boolean verbose, broadcastMessage;
+    private boolean verbose, broadcastMessage, autojoin;
 
     @Override
     public void onEnable() {
@@ -48,11 +47,14 @@ public class TwitchChat extends JavaPlugin {
         this.client = new IRCClient(this);
         this.loadSettings();
         this.initConnection();
+        this.getLogger().info("Enabled");
     }
 
     @Override
     public void onDisable() {
         this.client.disconnect();
+        this.saveSettings();
+        this.getLogger().info("Disabled");
     }
     
     public ArrayList<String> getIgnoreList() {
@@ -64,7 +66,7 @@ public class TwitchChat extends JavaPlugin {
     }
     
     public ArrayList<UUID> getMessageRecievers() {
-        return this.smtp;
+        return this.recievers;
     }
 
     public void onMessage(ChatEntry entry) {
@@ -90,10 +92,10 @@ public class TwitchChat extends JavaPlugin {
             badges.toString(),
             entry.getDisplayName(),
             entry.getMessage()
-        });
+        }).trim();
 
         if (!this.broadcastMessage) {
-            this.smtp.stream().forEach((uuid) -> {
+            this.recievers.stream().forEach((uuid) -> {
                 this.getServer().getPlayer(uuid).sendMessage(output);
             });
         } else {
@@ -118,6 +120,14 @@ public class TwitchChat extends JavaPlugin {
     public void ignoreListRemove(String username) {
         this.ignoreList.remove(username.toLowerCase());
     }
+    
+    public void addReciever(UUID reciever) {
+        this.recievers.add(reciever);
+    }
+    
+    public void removeReciever(UUID reciever) {
+        this.recievers.remove(reciever);
+    }
 
     private void initConnection() {
         if (this.client.isConnected()) {
@@ -130,11 +140,36 @@ public class TwitchChat extends JavaPlugin {
             this.client.setVerbose(this.verbose);
             this.client.connect("irc.chat.twitch.tv", 6667, this.oauthKey);
             this.client.sendRawLine("CAP REQ :twitch.tv/tags");
+            if (this.autojoin) {
+                this.joinChannels();
+            }
+        } catch (IOException | IrcException ex) {
+            this.getLogger().log(Level.WARNING, "Failed to connect", ex);
+        }
+    }
+    
+    public void joinChannels() {
+        synchronized(this.currentChannels) {
             this.currentChannels.stream().forEach(chan -> {
                 this.client.joinChannel(chan);
             });
-        } catch (IOException | IrcException ex) {
-            this.getLogger().log(Level.WARNING, "Failed to connect", ex);
+        }
+    }
+    
+    public void partAllChannels() {
+        synchronized (this.currentChannels) {
+            this.currentChannels.stream().forEach(chan -> {
+                this.client.partChannel(chan);
+            });
+        }
+        
+        if (this.client.getChannels().length > 0) {
+            this.getLogger().info("Woah. We still have channels.");
+            
+            for (String chan : this.client.getChannels()) {
+                this.currentChannels.add(chan);
+                this.client.partChannel(chan);
+            }
         }
     }
 
@@ -155,6 +190,7 @@ public class TwitchChat extends JavaPlugin {
         this.oauthKey = cs.getString("connection.oAuthKey");
 
         this.broadcastMessage = cs.getBoolean("broadcastMessage");
+        this.autojoin = cs.getBoolean("autojoin");
 
         this.badgeMod = ChatColor.translateAlternateColorCodes('&', cs.getString("tags.mod"));
         this.badgeTurbo = ChatColor.translateAlternateColorCodes('&', cs.getString("tags.turbo"));
@@ -175,5 +211,15 @@ public class TwitchChat extends JavaPlugin {
         this.twitchMessage = new MessageFormat(
                 ChatColor.translateAlternateColorCodes('&', cs.getString("twitchChatStyle"))
         );
+    }
+    
+    private void saveSettings() {
+        this.getConfig().set("ignoreList", this.getIgnoreList());
+        this.getConfig().set("autojoinChannels", this.getCurrentChannels());
+        this.getConfig().set("messageRecievers", this.getMessageRecievers());
+        this.getConfig().set("broadcastMessage", this.broadcastMessage);
+        this.getConfig().set("autojoin", this.autojoin);
+        this.getConfig().set("verbose", this.verbose);
+        this.saveConfig();
     }
 }
